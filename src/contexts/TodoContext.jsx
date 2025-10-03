@@ -31,6 +31,76 @@ export const TodoProvider = ({ children }) => {
         },
       });
     },
+    updateTodo: (id, text) => {
+      dispatch({
+        type: TODO_ACTIONS.UPDATE,
+        payload: { id, text },
+      });
+    },
+    deleteTodo: (id) => {
+      dispatch({
+        type: TODO_ACTIONS.DELETE,
+        payload: id,
+      });
+    },
+    clearCompleted: () => {
+      dispatch({
+        type: TODO_ACTIONS.CLEAR_COMPLETED,
+      });
+    },
+    toggleAll: (completed) => {
+      dispatch({
+        type: TODO_ACTIONS.TOGGLE_ALL,
+        payload: completed,
+      });
+    },
+    setFilter: (filter) => {
+      dispatch({
+        type: TODO_ACTIONS.SET_FILTER,
+        payload: filter,
+      });
+    },
+    startEdit: (id) => {
+      dispatch({
+        type: TODO_ACTIONS.START_EDIT,
+        payload: id,
+      });
+    },
+    cancelEdit: () => {
+      dispatch({
+        type: TODO_ACTIONS.CANCEL_EDIT,
+      });
+    },
+    reorderTodos: (startIndex, endIndex) => {
+      dispatch({
+        type: TODO_ACTIONS.REORDER,
+        payload: { startIndex, endIndex },
+      });
+    },  
+    toggleTodo: (id) => {
+      dispatch({
+        type: TODO_ACTIONS.TOGGLE,
+        payload: id,
+      });
+    },
+    setLoading: (isLoading) => {
+      dispatch({
+        type: TODO_ACTIONS.SET_LOADING,
+        payload: isLoading,
+      });
+    },
+    setError: (error) => {
+      dispatch({
+        type: TODO_ACTIONS.SET_ERROR,
+        payload: error,
+      });
+    },
+    setTodos: (todos) => {
+      dispatch({
+        type: TODO_ACTIONS.SET_TODOS,
+        payload: todos,
+      });
+    },
 
     // TODO: Ajoutez les autres méthodes pour les actions définies dans le reducer
   };
