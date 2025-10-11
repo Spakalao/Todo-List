@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { t } from "../../i18n-simple";
 import { useTodoContext } from "../../contexts/TodoContext";
 
 export default function TodoForm() {
@@ -18,16 +19,16 @@ export default function TodoForm() {
       <input
         type="text"
         value={inputText}
-        placeholder="Ajouter une tâche..."
+        placeholder={t("Ajouter une tâche...")}
         onChange={(e) => setInputText(e.target.value)}
       />
       <button type="submit" disabled={!inputText.trim()}>
-        Ajouter
+        {t("Ajouter")}
       </button>
 
       <div className="form-status">
-        {state.loading && <span>Chargement...</span>}
-        {state.error && <span style={{ color: "red" }}>{state.error}</span>}
+        {state.loading && <div className="loading">{t("Chargement...")}</div>}
+        {state.error && <div className="error">{state.error}</div>}
       </div>
     </form>
   );

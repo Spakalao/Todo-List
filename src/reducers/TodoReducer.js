@@ -25,10 +25,12 @@ export const initialState = {
     { id: 3, text: "Todo 3", isEditing: false, completed: false },
   ],
   filter: "all", // all, active, completed
+  loading: false,
+  error: null,
 };
 
 
-export const todoReducer = (state, action) => {
+const todoReducer = (state, action) => {
   switch (action.type) {
     case TODO_ACTIONS.SET_TODOS:
       return {
@@ -59,10 +61,10 @@ export const todoReducer = (state, action) => {
         todos: state.todos.filter(todo => !todo.completed),
       };
     case TODO_ACTIONS.REORDER:
-      const { sourceIndex, destinationIndex } = action.payload;
+      const { startIndex, endIndex } = action.payload;
       const reorderedTodos = Array.from(state.todos);
-      const [movedTodo] = reorderedTodos.splice(sourceIndex, 1);
-      reorderedTodos.splice(destinationIndex, 0, movedTodo);
+      const [movedTodo] = reorderedTodos.splice(startIndex, 1);
+      reorderedTodos.splice(endIndex, 0, movedTodo);
       return {
         ...state,
         todos: reorderedTodos,
@@ -84,6 +86,31 @@ export const todoReducer = (state, action) => {
           todo.id === action.payload ? { ...todo, completed: !todo.completed } : todo
         ),
       };
-    // TODO: Implémentez les autres actions
+    case TODO_ACTIONS.START_EDIT:
+      return {
+        ...state,
+        todos: state.todos.map(todo =>
+          todo.id === action.payload ? { ...todo, isEditing: true } : todo
+        ),
+      };
+    case TODO_ACTIONS.CANCEL_EDIT:
+      return {
+        ...state,
+        todos: state.todos.map(todo => ({ ...todo, isEditing: false })),
+      };
+    case TODO_ACTIONS.SET_FILTER:
+      return {
+        ...state,
+        filter: action.payload,
+      };
+    case TODO_ACTIONS.TOGGLE_ALL:
+      return {
+        ...state,
+        todos: state.todos.map(todo => ({ ...todo, completed: action.payload })),
+      };
+    default:
+      return state;
   }
 };
+
+export { todoReducer };
