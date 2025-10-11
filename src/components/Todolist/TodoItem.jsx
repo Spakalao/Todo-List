@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { t } from "../../i18n-simple";
 import { useTodoContext } from "../../contexts/TodoContext";
 
 export default function TodoItem({ todo }) {
@@ -20,21 +21,43 @@ export default function TodoItem({ todo }) {
         type="checkbox"
         checked={todo.completed}
         onChange={() => actions.toggleTodo(todo.id)}
+        aria-label={todo.completed ? t('Marquer comme non terminée') : t('Marquer comme terminée')}
       />
 
       {todo.isEditing ? (
         <input
+          type="text"
           value={editText}
           onChange={(e) => setEditText(e.target.value)}
           onBlur={handleSave}
           onKeyDown={handleKeyDown}
           autoFocus
+          aria-label={t("Éditer la tâche")}
         />
       ) : (
-        <span onDoubleClick={() => actions.startEdit(todo.id)}>{todo.text}</span>
+        <span 
+          className="todo-text"
+          onDoubleClick={() => actions.startEdit(todo.id)}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              actions.startEdit(todo.id);
+            }
+          }}
+        >
+          {todo.text}
+        </span>
       )}
 
-      <button onClick={() => actions.deleteTodo(todo.id)}>🗑️</button>
+      <button 
+        className="delete-btn"
+        onClick={() => actions.deleteTodo(todo.id)}
+        aria-label={t("Supprimer la tâche")}
+        title={t("Supprimer")}
+      >
+        🗑️
+      </button>
     </li>
   );
 }
