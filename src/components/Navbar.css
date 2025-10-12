@@ -1,0 +1,121 @@
+/* Navbar Styles */
+.navbar {
+  background-color: var(--color-primary);
+  padding: 1rem 0;
+}
+
+.navbar-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.navbar-menubar {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.navbar-item {
+  position: relative;
+}
+
+.navbar-link,
+.navbar-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: none;
+  border: none;
+  color: var(--color-text);
+  text-decoration: none;
+  border-radius: var(--border-radius);
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.navbar-link:hover,
+.navbar-button:hover {
+  background-color: var(--color-primary-hover);
+}
+
+.navbar-link:focus,
+.navbar-button:focus {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.navbar-link.active {
+  background-color: var(--color-accent);
+  color: white;
+}
+
+.navbar-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.navbar-chevron {
+  width: 1rem;
+  height: 1rem;
+  transition: transform 0.2s ease;
+}
+
+.navbar-chevron--rotated {
+  transform: rotate(180deg);
+}
+
+.navbar-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: white;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  min-width: 200px;
+}
+
+.navbar-dropdown-content {
+  padding: 0.5rem 0;
+}
+
+.navbar-dropdown-item {
+  display: block;
+  padding: 0.75rem 1rem;
+  color: var(--color-text);
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+}
+
+.navbar-dropdown-item:hover {
+  background-color: var(--color-background);
+}
+
+.navbar-dropdown-item:focus {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+
+.navbar-dropdown-item.active {
+  background-color: var(--color-accent);
+  color: white;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .navbar-menubar {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .navbar-dropdown {
+    position: static;
+    box-shadow: none;
+    border: none;
+    border-top: 1px solid var(--color-border);
+  }
+}

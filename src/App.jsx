@@ -1,34 +1,34 @@
-import React, { useState } from 'react'
-import { setLocale, t, getCurrentLocale } from './i18n-simple'
+import React from 'react'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import { TodoProvider } from './contexts/TodoContext'
+import { LanguageProvider } from './contexts/LanguageContext'
+import Header from './components/Header'
 import TodoList from './components/Todolist/TodoList'
+import ArchivesPage from './components/ArchivesPage'
+import PageNotFound from './components/ErrorPages/PageNotFound'
+import { PATHS } from './paths'
 import './App.css'
 
 function App() {
-  const [currentLocale, setCurrentLocale] = useState('fr')
-
-  const handleLocaleChange = (newLocale) => {
-    setLocale(newLocale)
-    setCurrentLocale(newLocale)
-  }
-
   return (
-    <TodoProvider>
-      <div className="app">
-        <div className="language-selector">
-          <span>{t('Langue:')}</span>
-          <select 
-            value={currentLocale} 
-            onChange={(e) => handleLocaleChange(e.target.value)}
-          >
-            <option value="fr">🇫🇷 Français</option>
-            <option value="en">🇺🇸 English</option>
-          </select>
+    <LanguageProvider>
+      <TodoProvider>
+        <div className="app">
+          <Header />
+          
+          <main className="app-main">
+            <Routes>
+              <Route path={PATHS.TODOS.href} element={<TodoList />} />
+              <Route path={PATHS.ARCHIVES.href} element={<ArchivesPage />} />
+              {/* Redirection de la racine vers /todos */}
+              <Route path="/" element={<Navigate to={PATHS.TODOS.href} replace />} />
+              {/* Route 404 - doit être en dernière position */}
+              <Route path="/*" element={<PageNotFound />} />
+            </Routes>
+          </main>
         </div>
-        
-        <TodoList />
-      </div>
-    </TodoProvider>
+      </TodoProvider>
+    </LanguageProvider>
   )
 }
 
