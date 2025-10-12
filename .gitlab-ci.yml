@@ -1,3 +1,6 @@
+stages:
+  - sync
+
 sync_to_github:
   stage: sync
   image: alpine:latest
@@ -5,10 +8,16 @@ sync_to_github:
     - apk add --no-cache git
     - git config --global user.name "Amine Saidi"
     - git config --global user.email "saidi.amine2023@gitlab.com"
+    - git fetch --unshallow || true
   script:
-    - git remote add github https://${GITHUB_TOKEN}@github.com/Spakalao/Todo-List.git
+    # 👉 Test pour voir si la variable est bien injectée
+    - echo "Token détecté ? ${GITHUB_TOKEN:+✅ Oui}" || echo "❌ Non"
+
+    # 👉 Si le token est bien détecté, on pousse vers GitHub
+    - git remote add github https://oauth2:${GITHUB_TOKEN}@github.com/Spakalao/Todo-List.git
+    - git remote -v
     - git push --mirror github
   only:
     - master
   variables:
-    GITHUB_TOKEN: $GITHUB_TOKEN  # Variable définie dans GitLab CI/CD settings
+    GIT_DEPTH: "0"
