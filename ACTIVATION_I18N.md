@@ -151,3 +151,4 @@ npm run dev
 3. Regardez la console du navigateur pour les erreurs
 4. Vérifiez que les fichiers `.po` sont décommentés
 
+
