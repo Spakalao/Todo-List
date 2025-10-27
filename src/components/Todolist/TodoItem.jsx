@@ -50,14 +50,24 @@ export default function TodoItem({ todo }) {
         </span>
       )}
 
-      <button 
-        className="delete-btn"
-        onClick={() => actions.deleteTodo(todo.id)}
-        aria-label={t("Supprimer la tâche")}
-        title={t("Supprimer")}
-      >
-        🗑️
-      </button>
+      <div style={{ display: 'flex', gap: '0.5rem' }}>
+        <button 
+          className="archive-btn"
+          onClick={() => actions.archiveTodo(todo.id)}
+          aria-label={t("Archiver la tâche")}
+          title={t("Archiver")}
+        >
+          📦
+        </button>
+        <button 
+          className="delete-btn"
+          onClick={() => actions.deleteTodo(todo.id)}
+          aria-label={t("Supprimer la tâche")}
+          title={t("Supprimer")}
+        >
+          🗑️
+        </button>
+      </div>
     </li>
   );
 }

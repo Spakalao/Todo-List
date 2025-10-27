@@ -26,10 +26,11 @@ export default function TodoForm() {
         {t("Ajouter")}
       </button>
 
-      <div className="form-status">
-        {state.loading && <div className="loading">{t("Chargement...")}</div>}
-        {state.error && <div className="error">{state.error}</div>}
-      </div>
+      {state.error && (
+        <div className="form-status">
+          <div className="error">{state.error}</div>
+        </div>
+      )}
     </form>
   );
 }

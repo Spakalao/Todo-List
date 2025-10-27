@@ -30,24 +30,25 @@ function DropdownMenuItem({
 }) {
   return (
     <>
-      <button
+      <NavLink
         data-item-id={item.id}
+        to={item.href}
         className="navbar-button"
         role="menuitem"
         aria-haspopup="true"
         aria-expanded={activeDropdown === item.id}
         onKeyDown={(e) => handleKeyDown(e, item.id, true)}
-        onClick={() =>
-          setActiveDropdown(activeDropdown === item.id ? null : item.id)
-        }
         onMouseEnter={() => setActiveDropdown(item.id)}
+        onMouseLeave={() => {
+          // Ne rien faire pour garder le dropdown ouvert
+        }}
       >
         <item.icon className="navbar-icon" />
         {item.label}
         <ChevronDown
           className={`navbar-chevron ${activeDropdown === item.id ? "navbar-chevron--rotated" : ""}`}
         />
-      </button>
+      </NavLink>
 
       {activeDropdown === item.id && (
         <DropDownMenu

@@ -1,11 +1,11 @@
 export const PATHS = {
+  HOME: {
+    id: "home",
+    href: "/",
+  },
   TODOS: {
     id: "todos",
     href: "/todos",
-  },
-  HOME: {
-    id: "home",
-    href: "/home",
   },
   ARCHIVES: {
     id: "archives",

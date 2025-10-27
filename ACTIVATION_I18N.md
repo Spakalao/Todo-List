@@ -152,3 +152,4 @@ npm run dev
 4. Vérifiez que les fichiers `.po` sont décommentés
 
 
+

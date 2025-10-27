@@ -30,17 +30,22 @@ export const TodoProvider = ({ children }) => {
     deleteTodo: apiDeleteTodo,
   } = useTodoApi();
 
-  // Charger les todos au montage du composant
+  // Charger les todos depuis l'API uniquement s'il n'y a pas de données en localStorage
   useEffect(() => {
-    fetchTodos();
+    const hasLocalData = localStorage.getItem('todo-app-state');
+    if (!hasLocalData) {
+      fetchTodos();
+    }
   }, []);
 
-  // Synchroniser les todos de l'API avec le state du reducer
+  // Synchroniser les todos de l'API avec le state du reducer seulement si le state est vide
   useEffect(() => {
-    dispatch({
-      type: TODO_ACTIONS.SET_TODOS,
-      payload: apiTodos,
-    });
+    if (apiTodos.length > 0 && state.todos.length === 0) {
+      dispatch({
+        type: TODO_ACTIONS.SET_TODOS,
+        payload: apiTodos,
+      });
+    }
   }, [apiTodos]);
 
   // Synchroniser les états de loading et error
@@ -60,6 +65,9 @@ export const TodoProvider = ({ children }) => {
     }
   }, [apiError]);
 
+  // Note: La sauvegarde dans localStorage est gérée par le reducer
+  // après chaque action, donc pas besoin de le faire ici
+
   // Action creators avec mise à jour optimiste
   const actions = {
     addTodo: async (text) => {
@@ -68,6 +76,19 @@ export const TodoProvider = ({ children }) => {
           type: TODO_ACTIONS.SET_ERROR,
           payload: null,
         });
+        // Créer le nouveau todo localement
+        const newTodo = {
+          id: Date.now(),
+          text,
+          isEditing: false,
+          completed: false,
+        };
+        // Mettre à jour le reducer localement immédiatement
+        dispatch({
+          type: TODO_ACTIONS.ADD,
+          payload: newTodo,
+        });
+        // Optionnellement appeler l'API
         await apiAddTodo(text);
       } catch (error) {
         // L'erreur est déjà gérée dans le hook
@@ -80,6 +101,12 @@ export const TodoProvider = ({ children }) => {
           type: TODO_ACTIONS.SET_ERROR,
           payload: null,
         });
+        // Mettre à jour le reducer localement immédiatement
+        dispatch({
+          type: TODO_ACTIONS.UPDATE,
+          payload: { id, text },
+        });
+        // Optionnellement appeler l'API
         await apiUpdateTodo(id, text);
       } catch (error) {
         console.error('Erreur lors de la mise à jour:', error);
@@ -91,6 +118,12 @@ export const TodoProvider = ({ children }) => {
           type: TODO_ACTIONS.SET_ERROR,
           payload: null,
         });
+        // Mettre à jour le reducer localement
+        dispatch({
+          type: TODO_ACTIONS.DELETE,
+          payload: id,
+        });
+        // Optionnellement appeler l'API
         await apiDeleteTodo(id);
       } catch (error) {
         console.error('Erreur lors de la suppression:', error);
@@ -154,8 +187,24 @@ export const TodoProvider = ({ children }) => {
         payload: todos,
       });
     },
-
-    // TODO: Ajoutez les autres méthodes pour les actions définies dans le reducer
+    archiveTodo: (id) => {
+      dispatch({
+        type: TODO_ACTIONS.ARCHIVE_TODO,
+        payload: id,
+      });
+    },
+    restoreTodo: (id) => {
+      dispatch({
+        type: TODO_ACTIONS.RESTORE_TODO,
+        payload: id,
+      });
+    },
+    deleteArchived: (id) => {
+      dispatch({
+        type: TODO_ACTIONS.DELETE_ARCHIVED,
+        payload: id,
+      });
+    },
   };
 
   // Sélecteurs (computed values)
@@ -175,6 +224,9 @@ export const TodoProvider = ({ children }) => {
       const completed = state.todos.filter((todo) => todo.completed).length;
       const active = total - completed;
       return { total, completed, active };
+    },
+    getArchivedTodos: () => {
+      return state.archivedTodos;
     },
   };
 

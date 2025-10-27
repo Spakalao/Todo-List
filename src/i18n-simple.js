@@ -23,7 +23,19 @@ const messages = {
     "Retourner à l'accueil": "Retourner à l'accueil",
     "Cette page affichera les tâches archivées.": "Cette page affichera les tâches archivées.",
     "Fonctionnalité à implémenter...": "Fonctionnalité à implémenter...",
-    "Sélectionner la langue": "Sélectionner la langue"
+    "Sélectionner la langue": "Sélectionner la langue",
+    "Archiver": "Archiver",
+    "Archiver la tâche": "Archiver la tâche",
+    "Restaurer": "Restaurer",
+    "Restaurer la tâche": "Restaurer la tâche",
+    "Supprimer définitivement": "Supprimer définitivement",
+    "Complétée": "Complétée",
+    "Archivée le": "Archivée le",
+    "Aucune tâche archivée": "Aucune tâche archivée",
+    "tâche(s) archivée(s)": "tâche(s) archivée(s)",
+    "Vos tâches archivées apparaîtront ici": "Vos tâches archivées apparaîtront ici",
+    "Bienvenue dans votre gestionnaire de tâches !": "Bienvenue dans votre gestionnaire de tâches !",
+    "Voir les tâches": "Voir les tâches"
   },
   en: {
     "Ma Todo List": "My Todo List",
@@ -48,7 +60,19 @@ const messages = {
     "Retourner à l'accueil": "Return to home",
     "Cette page affichera les tâches archivées.": "This page will display archived tasks.",
     "Fonctionnalité à implémenter...": "Feature to be implemented...",
-    "Sélectionner la langue": "Select language"
+    "Sélectionner la langue": "Select language",
+    "Archiver": "Archive",
+    "Archiver la tâche": "Archive task",
+    "Restaurer": "Restore",
+    "Restaurer la tâche": "Restore task",
+    "Supprimer définitivement": "Permanently delete",
+    "Complétée": "Completed",
+    "Archivée le": "Archived on",
+    "Aucune tâche archivée": "No archived tasks",
+    "tâche(s) archivée(s)": "archived task(s)",
+    "Vos tâches archivées apparaîtront ici": "Your archived tasks will appear here",
+    "Bienvenue dans votre gestionnaire de tâches !": "Welcome to your task manager!",
+    "Voir les tâches": "View tasks"
   }
 };
 
