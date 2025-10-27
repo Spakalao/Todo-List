@@ -16,7 +16,7 @@ pipeline {
 
     stage('Install Dependencies') {
       steps {
-        sh 'npm ci --legacy-peer-deps'
+        sh 'export PATH="/usr/bin:$PATH" && npm ci --legacy-peer-deps'
       }
     }
 
