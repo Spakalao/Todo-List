@@ -20,9 +20,12 @@ pipeline {
           script {
             echo 'Logging into Docker Hub...'
             sh '''
-              set +x
-              echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin docker.io
+              docker login -u "$DOCKER_USER" -p "$DOCKER_PASS" docker.io
             '''
+            
+            echo 'Verifying Docker access...'
+            sh 'docker ps || true'
+            sh 'docker version || true'
             
             echo 'Building Docker image with Node.js 20 (from Dockerfile)...'
             sh "docker build -t ${IMAGE}:${TAG} ."
