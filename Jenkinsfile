@@ -1,85 +1,66 @@
 pipeline {
-  agent any
+    agent any
 
-  environment {
-    IMAGE = "spakalao/todo-list"
-    TAG = "${env.BUILD_NUMBER}"
-    REGISTRY = "docker.io"
-  }
-
-  stages {
-    stage('Checkout') {
-      steps {
-        checkout scm
-      }
+    environment {
+        IMAGE = "spakalao/todo-list"
+        TAG = "${env.BUILD_NUMBER}"
     }
 
-    stage('Build & Push Docker Image') {
-      steps {
-        withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-          script {
-            echo 'Fixing Docker permissions...'
-            sh 'sudo chmod 666 /var/run/docker.sock || true'
-            
-            echo 'Installing Docker CLI if needed...'
-            sh ''' 
-              if ! command -v docker &> /dev/null; then
-                curl -fsSL https://get.docker.com | sh || true
-              fi
-            '''
-            
-            echo 'Logging into Docker Hub...'
-            sh '''
-              docker login -u "$DOCKER_USER" -p "$DOCKER_PASS" docker.io
-            '''
-            
-            echo 'Verifying Docker access...'
-            sh 'docker ps || true'
-            sh 'docker version || true'
-            
-            echo 'Building Docker image with Node.js 20 (from Dockerfile)...'
-            sh "docker build -t ${IMAGE}:${TAG} ."
-            sh "docker tag ${IMAGE}:${TAG} ${IMAGE}:latest"
-            
-            echo 'Pushing images to Docker Hub...'
-            sh "docker push ${IMAGE}:${TAG}"
-            sh "docker push ${IMAGE}:latest"
-          }
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
         }
-      }
-    }
 
-    stage('Deploy to Kubernetes') {
-      when {
-        expression { return env.BRANCH_NAME == 'master' || env.BRANCH_NAME == 'main' }
-      }
-      steps {
-        script {
-          try {
-            // Essayer de mettre à jour l'image du déploiement existant
-            sh "kubectl set image deployment/todo-list todo-list=${IMAGE}:${TAG} -n default --record || true"
-          } catch(Exception e) {
-            echo "Deployment not found, applying new deployment..."
-            sh "kubectl apply -f k8s/deployment.yaml"
-          }
-          // Attendre que le déploiement soit prêt
-          sh "kubectl rollout status deployment/todo-list -n default --timeout=300s || true"
+        stage('Build & Push Docker Image') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    script {
+                        echo 'Logging into Docker Hub...'
+                        sh '''
+                            docker login -u "$DOCKER_USER" -p "$DOCKER_PASS" docker.io
+                        '''
+                        
+                        echo 'Building Docker image...'
+                        sh "docker build -t ${IMAGE}:${TAG} ."
+                        sh "docker tag ${IMAGE}:${TAG} ${IMAGE}:latest"
+                        
+                        echo 'Pushing images to Docker Hub...'
+                        sh "docker push ${IMAGE}:${TAG}"
+                        sh "docker push ${IMAGE}:latest"
+                    }
+                }
+            }
         }
-      }
-    }
-  }
 
-  post {
-    always {
-      cleanWs()
+        stage('Deploy to Kubernetes') {
+            when {
+                expression { return env.BRANCH_NAME == 'master' || env.BRANCH_NAME == 'main' }
+            }
+            steps {
+                script {
+                    try {
+                        sh "kubectl set image deployment/todo-list todo-list=${IMAGE}:${TAG} -n default --record || true"
+                    } catch(Exception e) {
+                        echo "Deployment not found, applying new deployment..."
+                        sh "kubectl apply -f k8s/deployment.yaml"
+                    }
+                    sh "kubectl rollout status deployment/todo-list -n default --timeout=300s || true"
+                }
+            }
+        }
     }
-    success {
-      echo "✅ Pipeline succeeded: Build #${env.BUILD_NUMBER}"
-      echo "Image: ${IMAGE}:${TAG}"
+
+    post {
+        always {
+            cleanWs()
+        }
+        success {
+            echo "Pipeline succeeded: Build #${env.BUILD_NUMBER}"
+        }
+        failure {
+            echo "Pipeline failed at Build #${env.BUILD_NUMBER}"
+        }
     }
-    failure {
-      echo "❌ Pipeline failed at Build #${env.BUILD_NUMBER}"
-    }
-  }
 }
-

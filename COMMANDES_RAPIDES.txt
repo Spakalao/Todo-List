@@ -1,0 +1,33 @@
+==================================================
+   COMMANDES RAPIDES - JENKINS DOCKER
+==================================================
+
+AVANT CHAQUE BUILD (obligatoire):
+----------------------------------
+Windows:    double-cliquez sur "avant-build.bat"
+OU
+PowerShell: docker exec -u root jenkins chmod 666 /var/run/docker.sock
+
+LANCER JENKINS:
+---------------
+docker-compose up -d
+
+ARRETER JENKINS:
+----------------
+docker-compose down
+
+VOIR LES LOGS:
+--------------
+docker-compose logs -f jenkins
+
+REDEMARRER JENKINS:
+-------------------
+docker-compose restart jenkins
+
+REINSTALLER COMPLETEMENT:
+-------------------------
+docker-compose down -v
+docker-compose up -d
+
+==================================================
+
