@@ -1,22 +1,11 @@
-version: '3.8'
-
+version: '3'
 services:
   jenkins:
-    build:
-      context: .
-      dockerfile: Dockerfile.jenkins
-    container_name: jenkins
-    restart: unless-stopped
-    ports:
-      - "8080:8080"
-      - "50000:50000"
+    image: jenkins/jenkins:lts
+    user: root  # Or use jenkins:docker group
     volumes:
       - jenkins_home:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock
-    environment:
-      - JENKINS_OPTS=--httpPort=8080
-    privileged: true
-
-volumes:
-  jenkins_home:
-
+    ports:
+      - "8080:8080"
+      - "50000:50000"
