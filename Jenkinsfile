@@ -18,6 +18,16 @@ pipeline {
       steps {
         withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
           script {
+            echo 'Fixing Docker permissions...'
+            sh 'sudo chmod 666 /var/run/docker.sock || true'
+            
+            echo 'Installing Docker CLI if needed...'
+            sh ''' 
+              if ! command -v docker &> /dev/null; then
+                curl -fsSL https://get.docker.com | sh || true
+              fi
+            '''
+            
             echo 'Logging into Docker Hub...'
             sh '''
               docker login -u "$DOCKER_USER" -p "$DOCKER_PASS" docker.io
