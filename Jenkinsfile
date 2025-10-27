@@ -16,13 +16,16 @@ pipeline {
 
     stage('Install Dependencies') {
       steps {
-        sh 'npm ci'
+        sh 'npm ci --legacy-peer-deps'
       }
     }
 
     stage('Build') {
       steps {
-        sh 'npm run build'
+        sh '''
+          export PATH="/usr/local/bin:$PATH"
+          npm run build
+        '''
       }
     }
 
