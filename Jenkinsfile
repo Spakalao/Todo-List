@@ -14,19 +14,38 @@ pipeline {
       }
     }
 
+    stage('Setup Node.js') {
+      steps {
+        sh '''
+          # Use nvm to setup Node.js 20
+          export NVM_DIR="$HOME/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+          
+          # Install and use Node.js 20 if not available
+          if ! command -v node &> /dev/null || ! node -v | grep -q "v20"; then
+            nvm install 20
+            nvm use 20
+          fi
+          
+          node --version
+          npm --version
+        '''
+      }
+    }
+
     stage('Install Dependencies') {
       steps {
-        sh 'export PATH="/usr/bin:$PATH" && /usr/bin/npm ci --legacy-peer-deps'
+        sh 'npm ci --legacy-peer-deps'
       }
     }
 
     stage('Build') {
       steps {
         sh '''
-          export PATH="/usr/bin:$PATH"
-          /usr/bin/node --version
-          /usr/bin/npm --version
-          /usr/bin/npm run build
+          export NVM_DIR="$HOME/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+          nvm use 20
+          npm run build
         '''
       }
     }
