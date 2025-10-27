@@ -3,7 +3,8 @@ pipeline {
 
     environment {
         IMAGE = "spakalao/todo-list"
-        TAG = "${env.BUILD_NUMBER}"
+        TAG = "${env.BUILD_NUMBER}"              // Tag unique pour chaque build
+        LATEST_TAG = "latest"                    // Tag de confort pour les tests locaux
         DOCKER_HOST = "unix:///var/run/docker.sock"
     }
 
@@ -18,21 +19,24 @@ pipeline {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     script {
-                        // Corriger les permissions
+                        // Corriger les permissions sur le socket Docker (si besoin)
                         sh 'sudo chmod 666 /var/run/docker.sock || true'
                         
-                        echo 'Logging into Docker Hub...'
+                        echo '🔐 Connexion à Docker Hub...'
                         sh '''
                             docker login -u "$DOCKER_USER" -p "$DOCKER_PASS" docker.io
                         '''
                         
-                        echo 'Building Docker image...'
-                        sh "docker build -t ${IMAGE}:${TAG} ."
-                        sh "docker tag ${IMAGE}:${TAG} ${IMAGE}:latest"
-                        
-                        echo 'Pushing images to Docker Hub...'
-                        sh "docker push ${IMAGE}:${TAG}"
-                        sh "docker push ${IMAGE}:latest"
+                        echo "⚙️  Construction de l’image Docker ${IMAGE}:${TAG}..."
+                        sh """
+                            docker build -t ${IMAGE}:${TAG} -t ${IMAGE}:${LATEST_TAG} .
+                        """
+
+                        echo '☁️  Envoi de l’image sur Docker Hub...'
+                        sh """
+                            docker push ${IMAGE}:${TAG}
+                            docker push ${IMAGE}:${LATEST_TAG}
+                        """
                     }
                 }
             }
@@ -44,13 +48,19 @@ pipeline {
             }
             steps {
                 script {
+                    echo "🚀 Déploiement de ${IMAGE}:${TAG} sur Kubernetes..."
                     try {
                         sh "kubectl set image deployment/todo-list todo-list=${IMAGE}:${TAG} -n default --record || true"
                     } catch(Exception e) {
-                        echo "Deployment not found, applying new deployment..."
+                        echo "⚠️  Déploiement introuvable, application initiale..."
                         sh "kubectl apply -f k8s/deployment.yaml"
                     }
+
+                    echo "⏳ Attente du déploiement..."
                     sh "kubectl rollout status deployment/todo-list -n default --timeout=300s || true"
+
+                    echo "✅ Nouvelle image déployée : ${IMAGE}:${TAG}"
+                    sh "kubectl describe deployment todo-list -n default | grep Image"
                 }
             }
         }
@@ -61,10 +71,10 @@ pipeline {
             cleanWs()
         }
         success {
-            echo "Pipeline succeeded: Build #${env.BUILD_NUMBER}"
+            echo "✅ Pipeline réussi - Build #${env.BUILD_NUMBER} (${IMAGE}:${TAG})"
         }
         failure {
-            echo "Pipeline failed at Build #${env.BUILD_NUMBER}"
+            echo "❌ Pipeline échoué - Build #${env.BUILD_NUMBER}"
         }
     }
 }

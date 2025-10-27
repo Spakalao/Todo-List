@@ -1,49 +1,80 @@
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: todo-list
-  labels:
-    app: todo-list
-spec:
-  replicas: 2
-  selector:
-    matchLabels:
-      app: todo-list
-  template:
-    metadata:
-      labels:
-        app: todo-list
-    spec:
-      imagePullSecrets:
-      - name: regcred
-      containers:
-      - name: todo-list
-        image: spakalao/todo-list:latest
-        ports:
-        - containerPort: 80
-        imagePullPolicy: Always
-        resources:
-          requests:
-            memory: "64Mi"
-            cpu: "100m"
-          limits:
-            memory: "128Mi"
-            cpu: "200m"
+pipeline {
+    agent any
 
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: todo-list-svc
-  labels:
-    app: todo-list
-spec:
-  selector:
-    app: todo-list
-  type: NodePort
-  ports:
-  - port: 80
-    targetPort: 80
-    protocol: TCP
-    nodePort: 30080
+    environment {
+        IMAGE = "spakalao/todo-list"
+        TAG = "${env.BUILD_NUMBER}"              // Tag unique pour chaque build
+        LATEST_TAG = "latest"                    // Tag de confort pour les tests locaux
+        DOCKER_HOST = "unix:///var/run/docker.sock"
+    }
 
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build & Push Docker Image') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    script {
+                        // Corriger les permissions sur le socket Docker (si besoin)
+                        sh 'sudo chmod 666 /var/run/docker.sock || true'
+                        
+                        echo '🔐 Connexion à Docker Hub...'
+                        sh '''
+                            docker login -u "$DOCKER_USER" -p "$DOCKER_PASS" docker.io
+                        '''
+                        
+                        echo "⚙️  Construction de l’image Docker ${IMAGE}:${TAG}..."
+                        sh """
+                            docker build -t ${IMAGE}:${TAG} -t ${IMAGE}:${LATEST_TAG} .
+                        """
+
+                        echo '☁️  Envoi de l’image sur Docker Hub...'
+                        sh """
+                            docker push ${IMAGE}:${TAG}
+                            docker push ${IMAGE}:${LATEST_TAG}
+                        """
+                    }
+                }
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            when {
+                expression { return env.BRANCH_NAME == 'master' || env.BRANCH_NAME == 'main' }
+            }
+            steps {
+                script {
+                    echo "🚀 Déploiement de ${IMAGE}:${TAG} sur Kubernetes..."
+                    try {
+                        sh "kubectl set image deployment/todo-list todo-list=${IMAGE}:${TAG} -n default --record || true"
+                    } catch(Exception e) {
+                        echo "⚠️  Déploiement introuvable, application initiale..."
+                        sh "kubectl apply -f k8s/deployment.yaml"
+                    }
+
+                    echo "⏳ Attente du déploiement..."
+                    sh "kubectl rollout status deployment/todo-list -n default --timeout=300s || true"
+
+                    echo "✅ Nouvelle image déployée : ${IMAGE}:${TAG}"
+                    sh "kubectl describe deployment todo-list -n default | grep Image"
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
+        }
+        success {
+            echo "✅ Pipeline réussi - Build #${env.BUILD_NUMBER} (${IMAGE}:${TAG})"
+        }
+        failure {
+            echo "❌ Pipeline échoué - Build #${env.BUILD_NUMBER}"
+        }
+    }
+}
