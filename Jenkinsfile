@@ -4,6 +4,7 @@ pipeline {
     environment {
         IMAGE = "spakalao/todo-list"
         TAG = "${env.BUILD_NUMBER}"
+        DOCKER_HOST = "unix:///var/run/docker.sock"
     }
 
     stages {
@@ -14,15 +15,12 @@ pipeline {
         }
 
         stage('Build & Push Docker Image') {
-            agent {
-                docker {
-                    image 'docker:24-dind'
-                    args '-v /var/run/docker.sock:/var/run/docker.sock --privileged'
-                }
-            }
             steps {
                 withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     script {
+                        // Corriger les permissions
+                        sh 'sudo chmod 666 /var/run/docker.sock || true'
+                        
                         echo 'Logging into Docker Hub...'
                         sh '''
                             docker login -u "$DOCKER_USER" -p "$DOCKER_PASS" docker.io

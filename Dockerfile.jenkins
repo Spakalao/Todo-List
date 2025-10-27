@@ -8,14 +8,16 @@ RUN curl -fsSL https://get.docker.com -o get-docker.sh && \
     sh get-docker.sh && \
     rm get-docker.sh
 
-# Créer un script d'initialisation pour corriger les permissions
-RUN echo '#!/bin/bash' > /usr/local/bin/init-docker.sh && \
-    echo 'chmod 666 /var/run/docker.sock 2>/dev/null || true' >> /usr/local/bin/init-docker.sh && \
-    chmod +x /usr/local/bin/init-docker.sh
+# Copier le script entrypoint
+COPY entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+# Copier le script d'initialisation Jenkins
+COPY jenkins-init.groovy /usr/share/jenkins/ref/init.groovy.d/
 
 # Revenir au user jenkins
 USER jenkins
 
-# Copier le script d'initialisation
-COPY jenkins-init.groovy /usr/share/jenkins/ref/init.groovy.d/
+# Utiliser notre script entrypoint
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
