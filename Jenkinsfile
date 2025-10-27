@@ -23,7 +23,7 @@ pipeline {
     stage('Build') {
       steps {
         sh '''
-          export PATH="/usr/local/bin:$PATH"
+          export PATH="/usr/bin:$PATH"
           npm run build
         '''
       }
