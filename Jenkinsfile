@@ -19,7 +19,10 @@ pipeline {
         withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
           script {
             echo 'Logging into Docker Hub...'
-            sh "docker login -u $DOCKER_USER -p $DOCKER_PASS ${REGISTRY}"
+            sh '''
+              set +x
+              echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin docker.io
+            '''
             
             echo 'Building Docker image with Node.js 20 (from Dockerfile)...'
             sh "docker build -t ${IMAGE}:${TAG} ."
