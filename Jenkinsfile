@@ -16,7 +16,7 @@ pipeline {
 
     stage('Install Dependencies') {
       steps {
-        sh 'export PATH="/usr/bin:$PATH" && npm ci --legacy-peer-deps'
+        sh 'export PATH="/usr/bin:$PATH" && /usr/bin/npm ci --legacy-peer-deps'
       }
     }
 
@@ -24,7 +24,9 @@ pipeline {
       steps {
         sh '''
           export PATH="/usr/bin:$PATH"
-          npm run build
+          /usr/bin/node --version
+          /usr/bin/npm --version
+          /usr/bin/npm run build
         '''
       }
     }
