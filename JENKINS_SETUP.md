@@ -58,13 +58,12 @@ Si votre code est sur GitHub/GitLab :
 ### Étapes du Pipeline
 
 1. **Checkout** : Récupère le code depuis Git
-2. **Install Dependencies** : Lance `npm ci`
-3. **Build** : Lance `npm run build`
-4. **Docker Build & Push** :
-   - Build l'image Docker
+2. **Build & Push Docker Image** :
+   - Build l'application dans Docker avec Node.js 20
+   - Build l'image Docker avec les fichiers statiques
    - Tag avec le numéro de build
    - Push sur Docker Hub (`spakalao/todo-list:BUILD_NUMBER` et `:latest`)
-5. **Deploy to Kubernetes** (uniquement sur master/main) :
+3. **Deploy to Kubernetes** (uniquement sur master/main) :
    - Met à jour ou crée le déploiement Kubernetes
 
 ### Lancer le Pipeline
@@ -119,6 +118,10 @@ docker logs -f jenkins
 ```
 
 ## 🐛 Résolution de problèmes
+
+### Problème : "SyntaxError: Unexpected token '.'" lors du build
+
+**Solution** : Le pipeline utilise maintenant Docker avec Node.js 20 pour builder l'application. L'ancien système Node.js du serveur Jenkins n'est plus utilisé. Voir commit `9ddb645`.
 
 ### Problème : "Cannot connect to Docker daemon"
 
