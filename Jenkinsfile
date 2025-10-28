@@ -64,9 +64,9 @@ pipeline {
                     // Vérifie l'image réellement déployée
                     sh "kubectl describe deployment todo-list -n default | grep Image"
 
-                    // Vérification rapide HTTP (optionnel)
+                    // Vérification rapide HTTP (corrigé pour Groovy)
                     echo "🔍 Test de disponibilité de l'application..."
-                    sh "curl -f http://$(minikube ip):30080 || echo '⚠️ L'application ne répond pas encore'"
+                    sh 'curl -f http://$(minikube ip):30080 || echo "⚠️ L\'application ne répond pas encore"'
                 }
             }
         }
@@ -84,3 +84,4 @@ pipeline {
         }
     }
 }
+
