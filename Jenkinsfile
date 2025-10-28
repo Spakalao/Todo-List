@@ -4,7 +4,7 @@ pipeline {
     environment {
         DOCKER_IMAGE = "spakalao/todo-list"
         DOCKER_TAG = "${BUILD_NUMBER}"
-        KUBECONFIG = "/var/lib/jenkins/.kube/config"  // ou /var/jenkins_home/.kube/config si Docker
+        KUBECONFIG = "/var/lib/jenkins/.kube/config"
     }
     
     stages {
@@ -37,31 +37,30 @@ pipeline {
                     echo "🚀 Déploiement de ${DOCKER_IMAGE}:${DOCKER_TAG} sur Kubernetes..."
                     
                     sh '''
-                        # Vérifier la connexion Kubernetes
-                        kubectl version --client
+                        # Vérifier le cluster
+                        echo "=== Cluster Info ==="
+                        kubectl cluster-info
+                        kubectl get nodes
                         
-                        # Vérifier si le déploiement existe
-                        if kubectl get deployment todo-list -n default 2>/dev/null; then
-                            echo "📦 Mise à jour du déploiement existant..."
-                            kubectl set image deployment/todo-list todo-list=${DOCKER_IMAGE}:${DOCKER_TAG} -n default
-                        else
-                            echo "✨ Création d'un nouveau déploiement..."
-                            kubectl apply -f k8s/deployment.yaml
-                            kubectl apply -f k8s/service.yaml
-                            kubectl set image deployment/todo-list todo-list=${DOCKER_IMAGE}:${DOCKER_TAG} -n default
-                        fi
+                        # Appliquer les manifests
+                        echo "=== Déploiement ==="
+                        kubectl apply -f k8s/deployment.yaml
+                        kubectl apply -f k8s/service.yaml
                         
-                        # Attendre que le rollout soit terminé
-                        echo "⏳ Attente du rollout..."
+                        # Mettre à jour l'image
+                        kubectl set image deployment/todo-list \
+                            todo-list=${DOCKER_IMAGE}:${DOCKER_TAG} \
+                            -n default
+                        
+                        # Attendre le rollout
                         kubectl rollout status deployment/todo-list -n default --timeout=5m
                         
-                        # Afficher le statut des pods
-                        echo "=== Status des Pods ==="
+                        # Afficher le statut
+                        echo "=== Status ==="
                         kubectl get pods -n default -l app=todo-list
-                        
-                        # Afficher les services
-                        echo "=== Services ==="
                         kubectl get svc -n default -l app=todo-list
+                        
+                        echo "🌐 Application disponible sur http://localhost:30080"
                     '''
                     
                     echo "✅ Déploiement terminé avec succès !"
