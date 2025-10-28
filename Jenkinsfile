@@ -40,16 +40,19 @@ pipeline {
                         # Vérifier la connexion Kubernetes
                         kubectl version --client
                         
-                        # Appliquer les manifests
-                        kubectl apply -f k8s/deployment.yaml
-                        kubectl apply -f k8s/service.yaml
-                        
-                        # Mettre à jour l'image du déploiement
-                        kubectl set image deployment/todo-list \
-                            todo-list=${DOCKER_IMAGE}:${DOCKER_TAG} \
-                            -n default
+                        # Vérifier si le déploiement existe
+                        if kubectl get deployment todo-list -n default 2>/dev/null; then
+                            echo "📦 Mise à jour du déploiement existant..."
+                            kubectl set image deployment/todo-list todo-list=${DOCKER_IMAGE}:${DOCKER_TAG} -n default
+                        else
+                            echo "✨ Création d'un nouveau déploiement..."
+                            kubectl apply -f k8s/deployment.yaml
+                            kubectl apply -f k8s/service.yaml
+                            kubectl set image deployment/todo-list todo-list=${DOCKER_IMAGE}:${DOCKER_TAG} -n default
+                        fi
                         
                         # Attendre que le rollout soit terminé
+                        echo "⏳ Attente du rollout..."
                         kubectl rollout status deployment/todo-list -n default --timeout=5m
                         
                         # Afficher le statut des pods
