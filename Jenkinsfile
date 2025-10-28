@@ -3,8 +3,8 @@ pipeline {
 
     environment {
         IMAGE = "spakalao/todo-list"
-        TAG = "${env.BUILD_NUMBER}"        // Tag unique pour chaque build
-        LATEST_TAG = "latest"              // Tag de confort pour tests locaux
+        TAG = "${env.BUILD_NUMBER}"
+        LATEST_TAG = "latest"
         DOCKER_HOST = "unix:///var/run/docker.sock"
     }
 
@@ -19,24 +19,11 @@ pipeline {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     script {
-                        // Corriger permissions Docker si nécessaire
                         sh 'sudo chmod 666 /var/run/docker.sock || true'
-
-                        echo '🔐 Connexion à Docker Hub...'
-                        sh '''
-                            docker login -u "$DOCKER_USER" -p "$DOCKER_PASS" docker.io
-                        '''
-
-                        echo "⚙️  Construction de l’image Docker ${IMAGE}:${TAG}..."
-                        sh """
-                            docker build -t ${IMAGE}:${TAG} -t ${IMAGE}:${LATEST_TAG} .
-                        """
-
-                        echo '☁️  Push de l’image sur Docker Hub...'
-                        sh """
-                            docker push ${IMAGE}:${TAG}
-                            docker push ${IMAGE}:${LATEST_TAG}
-                        """
+                        sh 'docker login -u "$DOCKER_USER" -p "$DOCKER_PASS" docker.io'
+                        sh "docker build -t ${IMAGE}:${TAG} -t ${IMAGE}:${LATEST_TAG} ."
+                        sh "docker push ${IMAGE}:${TAG}"
+                        sh "docker push ${IMAGE}:${LATEST_TAG}"
                     }
                 }
             }
@@ -46,26 +33,25 @@ pipeline {
             steps {
                 script {
                     echo "🚀 Déploiement de ${IMAGE}:${TAG} sur Kubernetes..."
-                    
-                    // Vérifier si le déploiement existe
+
                     def deployExists = sh(
-                        script: "kubectl get deployment todo-list -n default 2>/dev/null",
+                        script: "kubectl get deployment todo-list -n default",
                         returnStatus: true
                     ) == 0
-                    
-                    if (deployExists) {
-                        echo "📦 Mise à jour du déploiement existant..."
-                        sh "kubectl set image deployment/todo-list todo-list=${IMAGE}:${TAG} -n default"
-                    } else {
-                        echo "✨ Création d'un nouveau déploiement..."
+
+                    if (!deployExists) {
+                        echo "✨ Déploiement introuvable, création initiale..."
                         sh "kubectl apply -f k8s/deployment.yaml"
-                        sh "kubectl set image deployment/todo-list todo-list=${IMAGE}:${TAG} -n default"
+                        sh "sleep 10"
                     }
 
-                    echo "⏳ Attente du rollout..."
+                    echo "📦 Mise à jour de l'image..."
+                    sh "kubectl set image deployment/todo-list todo-list=${IMAGE}:${TAG} -n default"
+
+                    echo "⏳ Attente du rollout complet..."
                     sh "kubectl rollout status deployment/todo-list -n default --timeout=300s"
 
-                    echo "✅ Image déployée : ${IMAGE}:${TAG}"
+                    echo "🔍 Vérification de l'image déployée..."
                     sh "kubectl get deployment todo-list -n default -o jsonpath='{.spec.template.spec.containers[0].image}'"
                 }
             }
@@ -73,15 +59,8 @@ pipeline {
     }
 
     post {
-        always {
-            cleanWs()
-        }
-        success {
-            echo "✅ Pipeline réussi - Build #${env.BUILD_NUMBER} (${IMAGE}:${TAG})"
-        }
-        failure {
-            echo "❌ Pipeline échoué - Build #${env.BUILD_NUMBER}"
-        }
+        always { cleanWs() }
+        success { echo "✅ Pipeline réussi - Build #${env.BUILD_NUMBER} (${IMAGE}:${TAG})" }
+        failure { echo "❌ Pipeline échoué - Build #${env.BUILD_NUMBER}" }
     }
 }
-
