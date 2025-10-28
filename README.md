@@ -50,4 +50,3 @@ Notes:
 - Assurez-vous que le kubeconfig de Jenkins pointe vers votre cluster (Docker Desktop ou autre).
 
 ---
-Projet réalisé à des fins pédagogiques.
