@@ -43,17 +43,26 @@ pipeline {
         }
 
         stage('Deploy to Kubernetes') {
-            when {
-                expression { return env.BRANCH_NAME == 'master' || env.BRANCH_NAME == 'main' }
-            }
             steps {
                 script {
                     echo "🚀 Déploiement de ${IMAGE}:${TAG} sur Kubernetes..."
-                    try {
-                        sh "kubectl set image deployment/todo-list todo-list=${IMAGE}:${TAG} -n default --record || true"
-                    } catch(Exception e) {
-                        echo "⚠️  Déploiement introuvable, application initiale..."
+                    
+                    // Vérifier si le déploiement existe
+                    def deployExists = sh(
+                        script: "kubectl get deployment todo-list -n default 2>/dev/null",
+                        returnStatus: true
+                    ) == 0
+                    
+                    if (deployExists) {
+                        // Déploiement existe, mettre à jour l'image
+                        echo "📦 Mise à jour du déploiement existant..."
+                        sh "kubectl set image deployment/todo-list todo-list=${IMAGE}:${TAG} -n default"
+                    } else {
+                        // Déploiement n'existe pas, créer
+                        echo "✨ Création d'un nouveau déploiement..."
                         sh "kubectl apply -f k8s/deployment.yaml"
+                        // Mettre à jour avec la bonne image
+                        sh "kubectl set image deployment/todo-list todo-list=${IMAGE}:${TAG} -n default"
                     }
 
                     echo "⏳ Attente du déploiement..."
