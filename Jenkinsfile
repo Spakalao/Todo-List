@@ -43,30 +43,30 @@ pipeline {
         }
 
         stage('Deploy to Kubernetes') {
-            when {
-                expression { return env.BRANCH_NAME == 'master' || env.BRANCH_NAME == 'main' }
-            }
             steps {
                 script {
                     echo "🚀 Déploiement de ${IMAGE}:${TAG} sur Kubernetes..."
-                    try {
-                        // Met à jour le déploiement si il existe
-                        sh "kubectl set image deployment/todo-list todo-list=${IMAGE}:${TAG} -n default --record || true"
-                    } catch(Exception e) {
-                        echo "⚠️ Déploiement introuvable, création initiale..."
+                    
+                    // Vérifier si le déploiement existe
+                    def deployExists = sh(
+                        script: "kubectl get deployment todo-list -n default 2>/dev/null",
+                        returnStatus: true
+                    ) == 0
+                    
+                    if (deployExists) {
+                        echo "📦 Mise à jour du déploiement existant..."
+                        sh "kubectl set image deployment/todo-list todo-list=${IMAGE}:${TAG} -n default"
+                    } else {
+                        echo "✨ Création d'un nouveau déploiement..."
                         sh "kubectl apply -f k8s/deployment.yaml"
+                        sh "kubectl set image deployment/todo-list todo-list=${IMAGE}:${TAG} -n default"
                     }
 
-                    // Attendre que le déploiement soit complètement disponible
                     echo "⏳ Attente du rollout..."
-                    sh "kubectl wait --for=condition=available deployment/todo-list -n default --timeout=300s"
+                    sh "kubectl rollout status deployment/todo-list -n default --timeout=300s"
 
-                    // Vérifie l'image réellement déployée
-                    sh "kubectl describe deployment todo-list -n default | grep Image"
-
-                    // Vérification rapide HTTP (corrigé pour Groovy)
-                    echo "🔍 Test de disponibilité de l'application..."
-                    sh 'curl -f http://$(minikube ip):30080 || echo "⚠️ L\'application ne répond pas encore"'
+                    echo "✅ Image déployée : ${IMAGE}:${TAG}"
+                    sh "kubectl get deployment todo-list -n default -o jsonpath='{.spec.template.spec.containers[0].image}'"
                 }
             }
         }
