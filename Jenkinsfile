@@ -42,9 +42,13 @@ pipeline {
                         kubectl cluster-info
                         kubectl get nodes
                         
-                        # Appliquer les manifests
+                        # Déployer
                         echo "=== Déploiement ==="
                         kubectl apply -f k8s/deployment.yaml
+                        
+                        # Supprimer et recréer le service (pour éviter les conflits de port)
+                        echo "=== Service ==="
+                        kubectl delete svc todo-list -n default || echo "Service n'existe pas encore"
                         kubectl apply -f k8s/service.yaml
                         
                         # Mettre à jour l'image
@@ -60,7 +64,9 @@ pipeline {
                         kubectl get pods -n default -l app=todo-list
                         kubectl get svc -n default -l app=todo-list
                         
-                        echo "🌐 Application disponible sur http://localhost:30080"
+                        # Afficher l'URL d'accès
+                        NODE_PORT=$(kubectl get svc todo-list -n default -o jsonpath='{.spec.ports[0].nodePort}')
+                        echo "🌐 Application disponible sur http://localhost:${NODE_PORT}"
                     '''
                     
                     echo "✅ Déploiement terminé avec succès !"
